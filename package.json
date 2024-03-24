@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "express": "^4.18.3",
+    "localtunnel": "^2.0.2",
     "pug": "^3.0.2",
     "socket.io": "^4.7.5",
     "ws": "^8.16.0"
