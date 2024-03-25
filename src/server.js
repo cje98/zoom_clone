@@ -12,10 +12,12 @@ app.get("/", (req, res) => res.render("home"));
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
+
 wsServer.on("connection", (socket) => {
+    socket["nickname"] = "Anon";
     socket.on("join_room", (roomName) => {
         socket.join(roomName);
-        socket.to(roomName).emit("welcome");
+        socket.to(roomName).emit("welcome", socket.nickname);
     });
     socket.on("offer", (offer, roomName) => {
         socket.to(roomName).emit("offer", offer);
@@ -25,8 +27,8 @@ wsServer.on("connection", (socket) => {
     });
     socket.on("ice", (ice, roomName) => {
         socket.to(roomName).emit("ice", ice);
-    })
-})
+    });
+});
 
 const handleListen = () => console.log(`Listenig on http://localhost:3000`);
 httpServer.listen(3000, handleListen);

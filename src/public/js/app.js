@@ -8,6 +8,9 @@ const camerasSelect = document.getElementById("cameras");
 
 const call = document.getElementById("call");
 
+
+
+
 call.hidden = true;
 
 let myStream;
@@ -15,6 +18,8 @@ let muted = false;
 let cameraOff = false;
 let roomName;
 let myPeerConnection;
+let myDataChannel;
+let nickname;
 
 async function getCameras() {
     try{
@@ -119,16 +124,31 @@ async function initCall() {
 async function handleWelcomeSubmit(event) {
     event.preventDefault();
     const input = welcomeForm.querySelector("input");
+    roomName = input.value;
+    
+    // change title
+    const title = document.getElementById("title");
+    title.innerText = `[Room: ${roomName}]`;
+    
     await initCall();
     socket.emit("join_room", input.value);
-    roomName = input.value;
     input.value = "";
 }
 welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
 // Socket Code
 // Peer A
-socket.on("welcome", async () => {
+socket.on("welcome", async (user) => {
+    // offer 만드는 곳에서 Data Channel 생성
+    myDataChannel = myPeerConnection.createDataChannel("chat");
+    // 메세지 이벤트 리스너 생성
+    myDataChannel.addEventListener("message", (event) => {
+        addMessage(`Anon: ${event.data}`);
+    });
+    
+    console.log("made data channel");
+    addMessage(`${user} arrived!`);
+
     // 다른 브라우저에서 접속할 때 실행됨, 서버 필요함
     const offer = await myPeerConnection.createOffer();
     myPeerConnection.setLocalDescription(offer);
@@ -139,6 +159,14 @@ socket.on("welcome", async () => {
 // Peer B
 // offer 받고 peer description 생성
 socket.on("offer", async(offer) => {
+    myPeerConnection.addEventListener("datachannel", (event) => {
+        myDataChannel = event.channel;
+        // 메세지 이벤트 리스너 생성
+        myDataChannel.addEventListener("message", (event) => {
+            addMessage(`Anon: ${event.data}`);
+        });
+    });
+
     console.log("received the offer");
     myPeerConnection.setRemoteDescription(offer);
     const answer = await myPeerConnection.createAnswer();
@@ -161,20 +189,7 @@ socket.on("ice", ice => {
 
 // RTC Code
 function makeConnection() {
-    myPeerConnection = new RTCPeerConnection({
-        iceServers:[
-            {
-                // STUN 서버 : 공용 주소를 알려주는 서버
-                url: [
-                    "stun:stun.l.google.com:19302",
-                    "stun:stun1.l.google.com:19302",
-                    "stun:stun2.l.google.com:19302",
-                    "stun:stun3.l.google.com:19302",
-                    "stun:stun4.l.google.com:19302",
-                ],
-            },
-        ],
-    });
+    myPeerConnection = new RTCPeerConnection();
     // myStream.getTracks() : 영상과 비디오 데이터 가져오는 메소드
     // 각 브라우저에 따로 구성
     myPeerConnection.addEventListener("icecandidate", handleIce);
@@ -195,4 +210,23 @@ function handleIce(data) {
 function handleAddStream(data) {
     const peerFace = document.getElementById("peerFace");
     peerFace.srcObject = data.stream;
+}
+
+// chat
+const chatForm = document.getElementById("chatForm");
+const chatInput = chatForm.querySelector("input");
+chatForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const message = chatInput.value;
+    addMessage(`You: ${message}`);
+    myDataChannel.send(message);
+});
+
+function addMessage(message) {
+    console.log(message);
+    const ul = document.getElementById("chat");
+    const li = document.createElement("li");
+    li.innerText = message;
+    ul.appendChild(li);
+    chatInput.value = "";
 }

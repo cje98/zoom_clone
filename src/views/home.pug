@@ -8,7 +8,7 @@ html(lang="en")
         <link rel="stylesheet" href="https://unpkg.com/mvp.css"> 
     body 
         header
-            h1 Noom
+            h1#title Noom
         main
             div#welcome
                 form
@@ -18,10 +18,16 @@ html(lang="en")
                 div#myStream
                     //- playsinline : 모바일 브라우저 property, 모바일 기기에서 전제화면 X
                     video#myFace(autoplay, playsinline, width="400", height="400")
+                    video#peerFace(autoplay, playsinline, width="400", height="400")
+                    br
                     button#mute Mute
                     button#camera Turn Camera Off
                     select#cameras
                         option(value="device") Face Camera
-                    video#peerFace(autoplay, playsinline, width="400", height="400")
+                div
+                    form#chatForm
+                        input(placeholder="write a message", required, type="text")
+                        button Send
+                    ul#chat
         script(src="/socket.io/socket.io.js")
         script(src="/public/js/app.js")
