@@ -1,0 +1,7 @@
+socket.io 설치방법
+
+npm i socket.io
+
+socket 연결 확인 방법
+npm run dev 후 브라우저 주소에 http://localhost:3000/socket.io/socket.io.js
+뜨는지 확인!

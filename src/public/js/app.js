@@ -222,6 +222,7 @@ chatForm.addEventListener("submit", (event) => {
     myDataChannel.send(message);
 });
 
+// Add Message
 function addMessage(message) {
     console.log(message);
     const ul = document.getElementById("chat");
